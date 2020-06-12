@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutterblocdemo/blocs/frases_bloc.dart';
 import 'package:flutterblocdemo/respositories/frases_repository.dart';
 
 void main() {
@@ -27,7 +29,10 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(),
+      home: BlocProvider(
+        create: (context) => FrasesBloc(FrasesRepository()),
+        child: MyHomePage(),
+      ),
     );
   }
 }
@@ -39,19 +44,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
-  String frase = "...";
-  FrasesRepository _frasesRepository;
-
-  @override
-  void initState() {
-    _frasesRepository = FrasesRepository();
-  }
-
-  void _getFraseAleatoria() async {
-    String nuevaFrase = await _frasesRepository.fraseAleatoria();
-    setState(() => frase = nuevaFrase);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,15 +57,26 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              frase,
-              style: Theme.of(context).textTheme.headline6,
-              textAlign: TextAlign.center,
+            BlocBuilder<FrasesBloc, FrasesState>(
+              builder: (context, state) {
+                if (state is FraseCargada) {
+                  return Text(
+                    state.frase,
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .headline6,
+                    textAlign: TextAlign.center,
+                  );
+                } else {
+                  return Container();
+                }
+              },
             ),
             SizedBox(height: 20,),
             RaisedButton(
-              onPressed: _getFraseAleatoria,
-              child: Text("Cargar Frase")
+                onPressed: () => BlocProvider.of<FrasesBloc>(context).add(CargarFrase()),
+                child: Text("Cargar Frase")
             )
           ],
         ),
